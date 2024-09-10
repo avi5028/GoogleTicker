@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ticker Data</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        background-color: black;
+        color: white;
+      }
+
+      .ticker-wrapper {
+        overflow: hidden;
+        white-space: nowrap;
+        background-color: black;
+        padding: 10px 0;
+        border-bottom: 2px solid #555;
+        position: relative;
+        font-size: 20px;
+        height: 50px; /* Adjust height as needed */
+      }
+
+      .ticker {
+        display: flex; /* Use flex to align items horizontally */
+        white-space: nowrap;
+        animation: scroll linear infinite;
+      }
+
+      .ticker-inner {
+        display: flex; /* Ensure items are displayed in a row */
+      }
+
+      .ticker-item {
+        display: inline-block;
+        align-items: center;
+        margin-right: 60px;
+      }
+
+      .name,
+      .price,
+      .change {
+        margin-right: 20px;
+        font-size: 22px;
+        font-weight: 600;
+      }
+
+      .change {
+        font-weight: bold;
+      }
+
+      .arrow {
+        margin-left: 10px;
+        font-weight: bold;
+        font-size: 22px;
+      }
+
+      .positive {
+        color: #4caf50;
+      }
+
+      .negative {
+        color: #f44336;
+      }
+
+      @keyframes scroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="ticker-wrapper">
+      <div class="ticker" id="ticker-container">
+        <!-- Ticker items will be injected here by JavaScript -->
+      </div>
+    </div>
+    <label for="speed-control">Speed (seconds):</label>
+    <input type="number" id="speed-control" value="60" min="10" step="1" />
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const tickerContainer = document.getElementById("ticker-container");
+        const speedControl = document.getElementById("speed-control");
+
+        function updateTickerSpeed() {
+          const speed = speedControl.value;
+          tickerContainer.style.animationDuration = `${speed}s`;
+        }
+
+        function fetchTickerData() {
+          fetch("/api/ticker")
+            .then((response) => response.json())
+            .then((data) => {
+              tickerContainer.innerHTML = ""; // Clear existing content
+
+              // Create a container to wrap all ticker items
+              const tickerInner = document.createElement("div");
+              tickerInner.className = "ticker-inner";
+
+              data.forEach((item) => {
+                const tickerItem = document.createElement("div");
+                tickerItem.classList.add("ticker-item");
+
+                const name = document.createElement("span");
+                name.classList.add("name");
+                name.textContent = item.name;
+
+                const price = document.createElement("span");
+                price.classList.add("price");
+                price.textContent = `₹${item.price.toFixed(2)}`;
+
+                const percentageChange = document.createElement("span");
+                percentageChange.classList.add("change");
+                percentageChange.textContent = `(${item.percentage_change.toFixed(
+                  2
+                )}%)`;
+                percentageChange.classList.add(
+                  item.percentage_change >= 0 ? "positive" : "negative"
+                );
+
+                const priceChange = document.createElement("span");
+                priceChange.classList.add("change");
+                priceChange.textContent = `₹${item.price_change.toFixed(2)}`;
+
+                const arrow = document.createElement("span");
+                arrow.classList.add("arrow");
+                arrow.classList.add(
+                  item.percentage_change >= 0 ? "positive" : "negative"
+                );
+                arrow.textContent = item.percentage_change >= 0 ? "▲" : "▼";
+
+                tickerItem.appendChild(name);
+                tickerItem.appendChild(price);
+                tickerItem.appendChild(percentageChange);
+                tickerItem.appendChild(priceChange);
+                tickerItem.appendChild(arrow);
+
+                tickerInner.appendChild(tickerItem);
+              });
+
+              // Duplicate the ticker items for seamless scrolling
+              tickerInner.innerHTML += tickerInner.innerHTML;
+              tickerContainer.appendChild(tickerInner);
+
+              // Calculate the total width of ticker items
+              const totalWidth = tickerInner.scrollWidth;
+              tickerContainer.style.width = `${totalWidth}px`;
+
+              updateTickerSpeed(); // Update speed on data fetch
+            })
+            .catch((error) => {
+              console.error("Error fetching ticker data:", error);
+            });
+        }
+
+        fetchTickerData();
+        setInterval(fetchTickerData, 60000); // Refresh data every minute
+
+        speedControl.addEventListener("input", updateTickerSpeed);
+      });
+    </script>
+  </body>
+</html>

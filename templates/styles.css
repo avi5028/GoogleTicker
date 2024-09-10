@@ -1,0 +1,68 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: black;
+  color: white;
+}
+
+.ticker-tape {
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: #333;
+  padding: 10px;
+  border-bottom: 2px solid #555;
+  position: relative;
+}
+
+.ticker {
+  display: flex;
+  animation: scroll 30s linear infinite;
+}
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  margin-right: 30px;
+}
+
+.logo {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
+}
+
+.name {
+  margin-right: 15px;
+}
+
+.price {
+  margin-right: 15px;
+  color: white;
+}
+
+.change {
+  margin-right: 10px;
+  font-weight: bold;
+}
+
+.arrow {
+  margin-left: 5px;
+  font-weight: bold;
+}
+
+.positive {
+  color: green;
+}
+
+.negative {
+  color: red;
+}
+
+@keyframes scroll {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
