@@ -38,7 +38,7 @@ tickers = [   "ABB",
     "BOSCHLTD",
     "BRITANNIA",
     "CANBK",
-    "CHOLAFIN",
+
     "CIPLA",
     "COALINDIA",
     "COLPAL",
@@ -196,7 +196,7 @@ previous_close_prices = {
     "2181": results.get("BOSCHLTD"),
     "547": results.get("BRITANNIA"),
     "10794": results.get("CANBK"),
-    "19257": results.get("CHOLAFIN"),
+
     "694": results.get("CIPLA"),
     "20374": results.get("COALINDIA"),
     "15141": results.get("COLPAL"),
@@ -304,7 +304,7 @@ security_id_to_name = {
     "2181": "BOSCHLTD",
     "547": "BRITANNIA",
     "10794": "CANBK",
-    "19257": "CHOLAFIN",
+
     "694": "CIPLA",
     "20374": "COALINDIA",
     "15141": "COLPAL",
@@ -413,7 +413,7 @@ instruments = [
     (1, "2181"),      # BOSCHLTD
     (1, "547"),       # BRITANNIA
     (1, "10794"),     # CANBK
-    (1, "19257"),     # CHOLAFIN
+  
     (1, "694"),       # CIPLA
     (1, "20374"),     # COALINDIA
     (1, "15141"),     # COLPAL
@@ -494,6 +494,12 @@ instruments = [
 
 # Type of data subscription
 subscription_code = marketfeed.Ticker
+import asyncio
+import threading
+from flask import Flask, render_template, jsonify
+ # Ensure this is the correct import based on your actual library
+
+app = Flask(__name__)
 
 # Dictionary to store ticker data by security ID
 ticker_data = {}
@@ -532,13 +538,6 @@ async def on_message(instance, message):
             percentage_change = round(percentage_change, 2)
             ticker_name = security_id_to_name.get(security_id, "Unknown Ticker")
 
-            # print(f"Security ID: {security_id}")
-            # print(f"Current Price: {current_price}")
-            # print(f"Previous Close: {previous_close}")
-            # print(f"Price Change: {price_change}")
-            # print(f"Percentage Change: {percentage_change}")
-            # print(f"Ticker Name: {ticker_name}")
-
             ticker_data[security_id] = {
                 'name': ticker_name,
                 'price': current_price,
@@ -558,9 +557,8 @@ async def start_feed(feed):
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
     finally:
-        # Ensure cleanup code here if necessary
+        # No need to call feed.close() if it doesn't exist
         print("Feed connection is closing.")
-        await feed.close()  # Close the feed if it has a close method
 
 @app.route('/')
 def index():
@@ -571,7 +569,7 @@ def get_ticker_data():
     return jsonify(list(ticker_data.values()))
 
 def run_flask_app():
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, use_reloader=False)
 
 if __name__ == '__main__':
     # Start Flask app in a separate thread
@@ -583,10 +581,12 @@ if __name__ == '__main__':
         on_connect=on_connect, on_message=on_message
     )
 
-    # Run the WebSocket feed
+    # Run the WebSocket feed in an asyncio event loop
+    loop = asyncio.get_event_loop()
     try:
-        asyncio.run(start_feed(feed))
+        loop.run_until_complete(start_feed(feed))
     except KeyboardInterrupt:
         print("Script interrupted by user.")
     finally:
         print("Script is terminating.")
+        loop.close()
