@@ -94,7 +94,7 @@
         }
 
         function fetchTickerData() {
-          fetch("/api/ticker")
+          fetch("http://127.0.0.1:5000/api/ticker")
             .then((response) => response.json())
             .then((data) => {
               tickerContainer.innerHTML = ""; // Clear existing content
@@ -103,46 +103,53 @@
               const tickerInner = document.createElement("div");
               tickerInner.className = "ticker-inner";
 
-              data.forEach((item) => {
-                const tickerItem = document.createElement("div");
-                tickerItem.classList.add("ticker-item");
+              // Iterate over the data object
+              for (const stock in data) {
+                if (data.hasOwnProperty(stock)) {
+                  const tickerData = data[stock];
+                  const tickerItem = document.createElement("div");
+                  tickerItem.classList.add("ticker-item");
 
-                const name = document.createElement("span");
-                name.classList.add("name");
-                name.textContent = item.name;
+                  const name = document.createElement("span");
+                  name.classList.add("name");
+                  name.textContent = stock;
 
-                const price = document.createElement("span");
-                price.classList.add("price");
-                price.textContent = `₹${item.price.toFixed(2)}`;
+                  const price = document.createElement("span");
+                  price.classList.add("price");
+                  price.textContent = `₹${tickerData.current_price.toFixed(2)}`;
 
-                const percentageChange = document.createElement("span");
-                percentageChange.classList.add("change");
-                percentageChange.textContent = `(${item.percentage_change.toFixed(
-                  2
-                )}%)`;
-                percentageChange.classList.add(
-                  item.percentage_change >= 0 ? "positive" : "negative"
-                );
+                  const percentageChange = document.createElement("span");
+                  percentageChange.classList.add("change");
+                  percentageChange.textContent = `(${parseFloat(
+                    tickerData.percentage_change
+                  ).toFixed(2)}%)`;
+                  percentageChange.classList.add(
+                    tickerData.percentage_change >= 0 ? "positive" : "negative"
+                  );
 
-                const priceChange = document.createElement("span");
-                priceChange.classList.add("change");
-                priceChange.textContent = `₹${item.price_change.toFixed(2)}`;
+                  const priceChange = document.createElement("span");
+                  priceChange.classList.add("change");
+                  priceChange.textContent = `₹${parseFloat(
+                    tickerData.price_change
+                  ).toFixed(2)}`;
 
-                const arrow = document.createElement("span");
-                arrow.classList.add("arrow");
-                arrow.classList.add(
-                  item.percentage_change >= 0 ? "positive" : "negative"
-                );
-                arrow.textContent = item.percentage_change >= 0 ? "▲" : "▼";
+                  const arrow = document.createElement("span");
+                  arrow.classList.add("arrow");
+                  arrow.classList.add(
+                    tickerData.percentage_change >= 0 ? "positive" : "negative"
+                  );
+                  arrow.textContent =
+                    tickerData.percentage_change >= 0 ? "▲" : "▼";
 
-                tickerItem.appendChild(name);
-                tickerItem.appendChild(price);
-                tickerItem.appendChild(percentageChange);
-                tickerItem.appendChild(priceChange);
-                tickerItem.appendChild(arrow);
+                  tickerItem.appendChild(name);
+                  tickerItem.appendChild(price);
+                  tickerItem.appendChild(percentageChange);
+                  tickerItem.appendChild(priceChange);
+                  tickerItem.appendChild(arrow);
 
-                tickerInner.appendChild(tickerItem);
-              });
+                  tickerInner.appendChild(tickerItem);
+                }
+              }
 
               // Duplicate the ticker items for seamless scrolling
               tickerInner.innerHTML += tickerInner.innerHTML;
