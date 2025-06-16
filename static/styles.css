@@ -1,0 +1,145 @@
+:root {
+  --color-background: #000000;
+  --color-text: #ffffff;
+  --color-positive: #4caf50;
+  --color-negative: #f44336;
+  --color-border: #555555;
+  --font-size-normal: 20px;
+  --font-size-large: 22px;
+}
+
+body {
+  margin: 0;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.ticker-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+  background-color: var(--color-background);
+  padding: 10px 0;
+  border-bottom: 2px solid var(--color-border);
+  position: relative;
+  font-size: var(--font-size-normal);
+  height: 50px;
+}
+
+.ticker {
+  display: flex;
+  white-space: nowrap;
+  animation: scroll linear infinite;
+}
+
+.ticker-inner {
+  display: flex;
+  padding: 0 20px;
+}
+
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 60px;
+}
+
+.name,
+.price,
+.change {
+  margin-right: 20px;
+  font-size: var(--font-size-large);
+  font-weight: 600;
+}
+
+.arrow {
+  margin-left: 10px;
+  font-weight: bold;
+  font-size: var(--font-size-large);
+}
+
+.positive {
+  color: var(--color-positive);
+}
+
+.negative {
+  color: var(--color-negative);
+}
+
+.error-message {
+  color: var(--color-negative);
+  text-align: center;
+  padding: 20px;
+  font-size: var(--font-size-normal);
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  font-size: var(--font-size-normal);
+}
+
+.controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+}
+
+.controls label {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.controls input {
+  background: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  padding: 5px;
+  width: 80px;
+  border-radius: 3px;
+}
+
+.last-update {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid var(--color-border);
+  font-size: 14px;
+}
+
+@keyframes scroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  :root {
+    --font-size-normal: 16px;
+    --font-size-large: 18px;
+  }
+
+  .ticker-item {
+    margin-right: 40px;
+  }
+
+  .controls {
+    bottom: 10px;
+    right: 10px;
+  }
+
+  .last-update {
+    bottom: 10px;
+    left: 10px;
+  }
+}

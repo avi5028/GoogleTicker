@@ -3,38 +3,49 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ticker Data</title>
+    <title>Google Ticker - Nifty 50 Live Data</title>
     <style>
+      :root {
+        --color-background: #000000;
+        --color-text: #ffffff;
+        --color-positive: #4caf50;
+        --color-negative: #f44336;
+        --color-border: #555555;
+        --font-size-normal: 20px;
+        --font-size-large: 22px;
+      }
+
       body {
         margin: 0;
         font-family: "Helvetica Neue", Arial, sans-serif;
-        background-color: black;
-        color: white;
+        background-color: var(--color-background);
+        color: var(--color-text);
       }
 
       .ticker-wrapper {
         overflow: hidden;
         white-space: nowrap;
-        background-color: black;
+        background-color: var(--color-background);
         padding: 10px 0;
-        border-bottom: 2px solid #555;
+        border-bottom: 2px solid var(--color-border);
         position: relative;
-        font-size: 20px;
-        height: 50px; /* Adjust height as needed */
+        font-size: var(--font-size-normal);
+        height: 50px;
       }
 
       .ticker {
-        display: flex; /* Use flex to align items horizontally */
+        display: flex;
         white-space: nowrap;
         animation: scroll linear infinite;
       }
 
       .ticker-inner {
-        display: flex; /* Ensure items are displayed in a row */
+        display: flex;
+        padding: 0 20px;
       }
 
       .ticker-item {
-        display: inline-block;
+        display: inline-flex;
         align-items: center;
         margin-right: 60px;
       }
@@ -43,34 +54,100 @@
       .price,
       .change {
         margin-right: 20px;
-        font-size: 22px;
+        font-size: var(--font-size-large);
         font-weight: 600;
-      }
-
-      .change {
-        font-weight: bold;
       }
 
       .arrow {
         margin-left: 10px;
         font-weight: bold;
-        font-size: 22px;
+        font-size: var(--font-size-large);
       }
 
       .positive {
-        color: #4caf50;
+        color: var(--color-positive);
       }
 
       .negative {
-        color: #f44336;
+        color: var(--color-negative);
+      }
+
+      .error-message {
+        color: var(--color-negative);
+        text-align: center;
+        padding: 20px;
+        font-size: var(--font-size-normal);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        font-size: var(--font-size-normal);
+      }
+
+      .controls {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid var(--color-border);
+      }
+
+      .controls label {
+        margin-right: 10px;
+        font-size: 16px;
+      }
+
+      .controls input {
+        background: var(--color-background);
+        color: var(--color-text);
+        border: 1px solid var(--color-border);
+        padding: 5px;
+        width: 80px;
+        border-radius: 3px;
+      }
+
+      .last-update {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid var(--color-border);
+        font-size: 14px;
       }
 
       @keyframes scroll {
         0% {
-          transform: translateX(0);
+          transform: translateX(100%);
         }
         100% {
-          transform: translateX(-50%);
+          transform: translateX(-100%);
+        }
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        :root {
+          --font-size-normal: 16px;
+          --font-size-large: 18px;
+        }
+
+        .ticker-item {
+          margin-right: 40px;
+        }
+
+        .controls {
+          bottom: 10px;
+          right: 10px;
+        }
+
+        .last-update {
+          bottom: 10px;
+          left: 10px;
         }
       }
     </style>
@@ -78,97 +155,169 @@
   <body>
     <div class="ticker-wrapper">
       <div class="ticker" id="ticker-container">
-        <!-- Ticker items will be injected here by JavaScript -->
+        <div class="loading">Loading ticker data...</div>
       </div>
     </div>
-    <label for="speed-control">Speed (seconds):</label>
-    <input type="number" id="speed-control" value="60" min="10" step="1" />
+
+    <div class="controls">
+      <label for="speed-control">Speed (seconds):</label>
+      <input type="number" id="speed-control" value="60" min="10" step="1" />
+    </div>
+
+    <div class="last-update" id="last-update">
+      Last updated: Never
+    </div>
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const tickerContainer = document.getElementById("ticker-container");
         const speedControl = document.getElementById("speed-control");
+        const lastUpdateElement = document.getElementById("last-update");
+        let isFirstLoad = true;
 
         function updateTickerSpeed() {
           const speed = speedControl.value;
-          tickerContainer.style.animationDuration = `${speed}s`;
+          const ticker = document.querySelector(".ticker");
+          if (ticker) {
+            ticker.style.animationDuration = `${speed}s`;
+          }
+        }
+
+        function formatTime(isoString) {
+          if (!isoString) return "Never";
+          const date = new Date(isoString);
+          return date.toLocaleTimeString();
+        }
+
+        function createTickerItem(stock, tickerData) {
+          const tickerItem = document.createElement("div");
+          tickerItem.classList.add("ticker-item");
+
+          const name = document.createElement("span");
+          name.classList.add("name");
+          name.textContent = stock;
+
+          const price = document.createElement("span");
+          price.classList.add("price");
+          price.textContent = `₹${tickerData.current_price.toFixed(2)}`;
+
+          const percentageChange = parseFloat(tickerData.percentage_change);
+          const priceChange = parseFloat(tickerData.price_change);
+
+          const percentageChangeSpan = document.createElement("span");
+          percentageChangeSpan.classList.add("change");
+          percentageChangeSpan.textContent = `(${percentageChange.toFixed(2)}%)`;
+          percentageChangeSpan.classList.add(
+            percentageChange >= 0 ? "positive" : "negative"
+          );
+
+          const priceChangeSpan = document.createElement("span");
+          priceChangeSpan.classList.add("change");
+          priceChangeSpan.textContent = `₹${priceChange.toFixed(2)}`;
+          priceChangeSpan.classList.add(
+            priceChange >= 0 ? "positive" : "negative"
+          );
+
+          const arrow = document.createElement("span");
+          arrow.classList.add("arrow");
+          arrow.classList.add(
+            percentageChange >= 0 ? "positive" : "negative"
+          );
+          arrow.textContent = percentageChange >= 0 ? "▲" : "▼";
+
+          tickerItem.appendChild(name);
+          tickerItem.appendChild(price);
+          tickerItem.appendChild(percentageChangeSpan);
+          tickerItem.appendChild(priceChangeSpan);
+          tickerItem.appendChild(arrow);
+
+          return tickerItem;
         }
 
         function fetchTickerData() {
-          fetch("http://127.0.0.1:5000/api/ticker")
-            .then((response) => response.json())
-            .then((data) => {
+          fetch("/api/ticker")
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((response) => {
+              const data = response.data;
+              const lastUpdate = response.last_update;
+
+              // Update last update time
+              lastUpdateElement.textContent = `Last updated: ${formatTime(lastUpdate)}`;
+
               tickerContainer.innerHTML = ""; // Clear existing content
 
               // Create a container to wrap all ticker items
               const tickerInner = document.createElement("div");
               tickerInner.className = "ticker-inner";
 
+              let validItemsCount = 0;
+
               // Iterate over the data object
-              for (const stock in data) {
-                if (data.hasOwnProperty(stock)) {
-                  const tickerData = data[stock];
-                  const tickerItem = document.createElement("div");
-                  tickerItem.classList.add("ticker-item");
-
-                  const name = document.createElement("span");
-                  name.classList.add("name");
-                  name.textContent = stock;
-
-                  const price = document.createElement("span");
-                  price.classList.add("price");
-                  price.textContent = `₹${tickerData.current_price.toFixed(2)}`;
-
-                  const percentageChange = document.createElement("span");
-                  percentageChange.classList.add("change");
-                  percentageChange.textContent = `(${parseFloat(
-                    tickerData.percentage_change
-                  ).toFixed(2)}%)`;
-                  percentageChange.classList.add(
-                    tickerData.percentage_change >= 0 ? "positive" : "negative"
-                  );
-
-                  const priceChange = document.createElement("span");
-                  priceChange.classList.add("change");
-                  priceChange.textContent = `₹${parseFloat(
-                    tickerData.price_change
-                  ).toFixed(2)}`;
-
-                  const arrow = document.createElement("span");
-                  arrow.classList.add("arrow");
-                  arrow.classList.add(
-                    tickerData.percentage_change >= 0 ? "positive" : "negative"
-                  );
-                  arrow.textContent =
-                    tickerData.percentage_change >= 0 ? "▲" : "▼";
-
-                  tickerItem.appendChild(name);
-                  tickerItem.appendChild(price);
-                  tickerItem.appendChild(percentageChange);
-                  tickerItem.appendChild(priceChange);
-                  tickerItem.appendChild(arrow);
-
-                  tickerInner.appendChild(tickerItem);
+              Object.entries(data).forEach(([stock, tickerData]) => {
+                // Skip items with errors or null prices
+                if (tickerData.error || !tickerData.current_price) {
+                  console.warn(`Skipping ${stock}: ${tickerData.error || 'No price data'}`);
+                  return;
                 }
+
+                try {
+                  const price = parseFloat(tickerData.current_price);
+                  const priceChange = parseFloat(tickerData.price_change);
+                  const percentageChange = parseFloat(tickerData.percentage_change);
+
+                  if (isNaN(price) || isNaN(priceChange) || isNaN(percentageChange)) {
+                    console.warn(`Invalid number format for ${stock}`);
+                    return;
+                  }
+
+                  tickerInner.appendChild(createTickerItem(stock, {
+                    ...tickerData,
+                    current_price: price,
+                    price_change: priceChange,
+                    percentage_change: percentageChange
+                  }));
+                  validItemsCount++;
+                } catch (error) {
+                  console.error(`Error processing ${stock}:`, error);
+                }
+              });
+
+              if (validItemsCount === 0) {
+                tickerContainer.innerHTML = '<div class="error-message">No valid ticker data available</div>';
+                return;
               }
 
               // Duplicate the ticker items for seamless scrolling
               tickerInner.innerHTML += tickerInner.innerHTML;
               tickerContainer.appendChild(tickerInner);
 
-              // Calculate the total width of ticker items
-              const totalWidth = tickerInner.scrollWidth;
-              tickerContainer.style.width = `${totalWidth}px`;
+              // Update animation speed
+              updateTickerSpeed();
 
-              updateTickerSpeed(); // Update speed on data fetch
+              // Start animation after first load
+              if (isFirstLoad) {
+                isFirstLoad = false;
+                tickerContainer.style.visibility = 'visible';
+              }
             })
             .catch((error) => {
               console.error("Error fetching ticker data:", error);
+              tickerContainer.innerHTML = `<div class="error-message">Error loading data: ${error.message}</div>`;
             });
         }
 
+        // Initial fetch
         fetchTickerData();
-        setInterval(fetchTickerData, 60000); // Refresh data every minute
+        
+        // Refresh data every minute
+        setInterval(fetchTickerData, 60000);
 
+        // Update speed when control changes
         speedControl.addEventListener("input", updateTickerSpeed);
       });
     </script>
