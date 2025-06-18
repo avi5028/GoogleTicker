@@ -36,7 +36,7 @@
       .ticker {
         display: flex;
         white-space: nowrap;
-        animation: scroll linear infinite;
+        /* Remove CSS animation - we'll use JavaScript */
       }
 
       .ticker-inner {
@@ -132,14 +132,7 @@
         font-size: 14px;
       }
 
-      @keyframes scroll {
-        0% {
-          transform: translateX(100%);
-        }
-        100% {
-          transform: translateX(-100%);
-        }
-      }
+      /* Removed CSS keyframes - using JavaScript animation instead */
 
       /* Responsive adjustments */
       @media (max-width: 768px) {
@@ -186,13 +179,39 @@
         const speedControl = document.getElementById("speed-control");
         const lastUpdateElement = document.getElementById("last-update");
         let isFirstLoad = true;
+        let animationId = null;
+        let currentPosition = 0;
+        let animationSpeed = 1; // pixels per frame
 
         function updateTickerSpeed() {
           const speed = speedControl.value;
-          const ticker = document.querySelector(".ticker");
-          if (ticker) {
-            ticker.style.animationDuration = `${speed}s`;
+          // Convert speed (seconds for full cycle) to pixels per frame
+          // Assuming 60fps and container width for calculation
+          animationSpeed = (window.innerWidth * 2) / (speed * 60);
+        }
+
+        function startTickerAnimation() {
+          const ticker = document.querySelector(".ticker-inner");
+          if (!ticker) return;
+
+          function animate() {
+            currentPosition -= animationSpeed;
+
+            // Reset position when ticker has scrolled completely
+            const tickerWidth = ticker.offsetWidth / 2; // Divided by 2 because content is duplicated
+            if (Math.abs(currentPosition) >= tickerWidth) {
+              currentPosition = 0;
+            }
+
+            ticker.style.transform = `translateX(${currentPosition}px)`;
+            animationId = requestAnimationFrame(animate);
           }
+
+          // Start animation
+          if (animationId) {
+            cancelAnimationFrame(animationId);
+          }
+          animate();
         }
 
         function formatTime(isoString) {
@@ -255,6 +274,132 @@
           return tickerItem;
         }
 
+        function updateTickerContent(data) {
+          const existingTicker = tickerContainer.querySelector('.ticker-inner');
+
+          if (!existingTicker) {
+            // First time setup - create the ticker
+            createInitialTicker(data);
+            return;
+          }
+
+          // Update existing ticker items without stopping animation
+          const tickerItems = existingTicker.querySelectorAll('.ticker-item');
+          const dataEntries = Object.entries(data).filter(([stock, tickerData]) =>
+            !tickerData.error && tickerData.current_price
+          );
+
+          // Update each ticker item with new data
+          tickerItems.forEach((item, index) => {
+            const dataIndex = index % dataEntries.length;
+            if (dataIndex < dataEntries.length) {
+              const [stock, tickerData] = dataEntries[dataIndex];
+              updateTickerItem(item, stock, tickerData);
+            }
+          });
+        }
+
+        function createInitialTicker(data) {
+          tickerContainer.innerHTML = ""; // Clear loading message
+
+          // Create a container to wrap all ticker items
+          const tickerInner = document.createElement("div");
+          tickerInner.className = "ticker-inner";
+
+          let validItemsCount = 0;
+
+          // Iterate over the data object
+          Object.entries(data).forEach(([stock, tickerData]) => {
+            // Skip items with errors or null prices
+            if (tickerData.error || !tickerData.current_price) {
+              console.warn(`Skipping ${stock}: ${tickerData.error || 'No price data'}`);
+              return;
+            }
+
+            try {
+              const price = parseFloat(tickerData.current_price);
+              const priceChange = parseFloat(tickerData.price_change);
+              const percentageChange = parseFloat(tickerData.percentage_change);
+
+              if (isNaN(price) || isNaN(priceChange) || isNaN(percentageChange)) {
+                console.warn(`Invalid number format for ${stock}`);
+                return;
+              }
+
+              tickerInner.appendChild(createTickerItem(stock, {
+                ...tickerData,
+                current_price: price,
+                price_change: priceChange,
+                percentage_change: percentageChange
+              }));
+              validItemsCount++;
+            } catch (error) {
+              console.error(`Error processing ${stock}:`, error);
+            }
+          });
+
+          if (validItemsCount === 0) {
+            tickerContainer.innerHTML = '<div class="error-message">No valid ticker data available</div>';
+            return;
+          }
+
+          // Duplicate the ticker items for seamless scrolling
+          tickerInner.innerHTML += tickerInner.innerHTML;
+          tickerContainer.appendChild(tickerInner);
+
+          // Update animation speed and start animation
+          updateTickerSpeed();
+          startTickerAnimation();
+
+          // Start animation after first load
+          if (isFirstLoad) {
+            isFirstLoad = false;
+            tickerContainer.style.visibility = 'visible';
+          }
+        }
+
+        function updateTickerItem(tickerItem, stock, tickerData) {
+          try {
+            const price = parseFloat(tickerData.current_price);
+            const priceChange = parseFloat(tickerData.price_change);
+            const percentageChange = parseFloat(tickerData.percentage_change);
+
+            if (isNaN(price) || isNaN(priceChange) || isNaN(percentageChange)) {
+              return;
+            }
+
+            // Update ticker name
+            const nameElement = tickerItem.querySelector('.ticker-name');
+            if (nameElement) nameElement.textContent = stock;
+
+            // Update price
+            const priceElement = tickerItem.querySelector('.price');
+            if (priceElement) priceElement.textContent = `₹${price.toFixed(2)}`;
+
+            // Update percentage change
+            const percentageElements = tickerItem.querySelectorAll('.change');
+            if (percentageElements[0]) {
+              percentageElements[0].textContent = `(${percentageChange.toFixed(2)}%)`;
+              percentageElements[0].className = `change ${percentageChange >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            // Update price change
+            if (percentageElements[1]) {
+              percentageElements[1].textContent = `₹${priceChange.toFixed(2)}`;
+              percentageElements[1].className = `change ${priceChange >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            // Update arrow
+            const arrowElement = tickerItem.querySelector('.arrow');
+            if (arrowElement) {
+              arrowElement.textContent = percentageChange >= 0 ? "▲" : "▼";
+              arrowElement.className = `arrow ${percentageChange >= 0 ? 'positive' : 'negative'}`;
+            }
+          } catch (error) {
+            console.error(`Error updating ticker item for ${stock}:`, error);
+          }
+        }
+
         function fetchTickerData() {
           fetch("/api/ticker")
             .then((response) => {
@@ -270,65 +415,14 @@
               // Update last update time
               lastUpdateElement.textContent = `Last updated: ${formatTime(lastUpdate)}`;
 
-              tickerContainer.innerHTML = ""; // Clear existing content
-
-              // Create a container to wrap all ticker items
-              const tickerInner = document.createElement("div");
-              tickerInner.className = "ticker-inner";
-
-              let validItemsCount = 0;
-
-              // Iterate over the data object
-              Object.entries(data).forEach(([stock, tickerData]) => {
-                // Skip items with errors or null prices
-                if (tickerData.error || !tickerData.current_price) {
-                  console.warn(`Skipping ${stock}: ${tickerData.error || 'No price data'}`);
-                  return;
-                }
-
-                try {
-                  const price = parseFloat(tickerData.current_price);
-                  const priceChange = parseFloat(tickerData.price_change);
-                  const percentageChange = parseFloat(tickerData.percentage_change);
-
-                  if (isNaN(price) || isNaN(priceChange) || isNaN(percentageChange)) {
-                    console.warn(`Invalid number format for ${stock}`);
-                    return;
-                  }
-
-                  tickerInner.appendChild(createTickerItem(stock, {
-                    ...tickerData,
-                    current_price: price,
-                    price_change: priceChange,
-                    percentage_change: percentageChange
-                  }));
-                  validItemsCount++;
-                } catch (error) {
-                  console.error(`Error processing ${stock}:`, error);
-                }
-              });
-
-              if (validItemsCount === 0) {
-                tickerContainer.innerHTML = '<div class="error-message">No valid ticker data available</div>';
-                return;
-              }
-
-              // Duplicate the ticker items for seamless scrolling
-              tickerInner.innerHTML += tickerInner.innerHTML;
-              tickerContainer.appendChild(tickerInner);
-
-              // Update animation speed
-              updateTickerSpeed();
-
-              // Start animation after first load
-              if (isFirstLoad) {
-                isFirstLoad = false;
-                tickerContainer.style.visibility = 'visible';
-              }
+              // Update ticker content without restarting animation
+              updateTickerContent(data);
             })
             .catch((error) => {
               console.error("Error fetching ticker data:", error);
-              tickerContainer.innerHTML = `<div class="error-message">Error loading data: ${error.message}</div>`;
+              if (isFirstLoad) {
+                tickerContainer.innerHTML = `<div class="error-message">Error loading data: ${error.message}</div>`;
+              }
             });
         }
 
@@ -340,6 +434,9 @@
 
         // Update speed when control changes
         speedControl.addEventListener("input", updateTickerSpeed);
+
+        // Handle window resize to recalculate animation speed
+        window.addEventListener("resize", updateTickerSpeed);
       });
     </script>
   </body>

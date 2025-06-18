@@ -70,3 +70,31 @@
 2025-06-18 18:19:52,394 - INFO - API request received. Data count: 50
 2025-06-18 18:19:52,395 - INFO - 127.0.0.1 - - [18/Jun/2025 18:19:52] "GET /api/ticker HTTP/1.1" 200 -
 2025-06-18 18:19:52,459 - INFO - 127.0.0.1 - - [18/Jun/2025 18:19:52] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-06-18 18:33:12,787 - INFO - Starting application...
+2025-06-18 18:33:12,787 - INFO - Starting data update...
+2025-06-18 18:33:51,065 - INFO - Data update completed
+2025-06-18 18:33:51,066 - INFO - Flask application started
+2025-06-18 18:33:51,071 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.91:5000
+2025-06-18 18:33:51,072 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-18 18:34:08,132 - INFO - 127.0.0.1 - - [18/Jun/2025 18:34:08] "GET / HTTP/1.1" 200 -
+2025-06-18 18:34:08,170 - INFO - API request received. Data count: 50
+2025-06-18 18:34:08,171 - INFO - 127.0.0.1 - - [18/Jun/2025 18:34:08] "GET /api/ticker HTTP/1.1" 200 -
+2025-06-18 18:38:51,250 - INFO - Starting data update...
+2025-06-18 18:39:08,922 - INFO - API request received. Data count: 50
+2025-06-18 18:39:08,923 - INFO - 127.0.0.1 - - [18/Jun/2025 18:39:08] "GET /api/ticker HTTP/1.1" 200 -
+2025-06-18 18:39:26,224 - INFO - Data update completed
+2025-06-18 18:40:45,360 - INFO - Starting application...
+2025-06-18 18:40:45,361 - INFO - Starting data update...
+2025-06-18 18:41:20,551 - INFO - Data update completed
+2025-06-18 18:41:20,580 - INFO - Flask application started
+2025-06-18 18:41:20,614 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.91:5000
+2025-06-18 18:41:20,614 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-18 18:41:30,480 - INFO - 127.0.0.1 - - [18/Jun/2025 18:41:30] "GET / HTTP/1.1" 200 -
+2025-06-18 18:41:30,520 - INFO - API request received. Data count: 50
+2025-06-18 18:41:30,521 - INFO - 127.0.0.1 - - [18/Jun/2025 18:41:30] "GET /api/ticker HTTP/1.1" 200 -
