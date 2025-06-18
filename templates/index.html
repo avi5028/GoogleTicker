@@ -46,15 +46,27 @@
 
       .ticker-item {
         display: inline-flex;
+        flex-direction: column;
         align-items: center;
         margin-right: 60px;
+        text-align: center;
       }
 
-      .name,
+      .ticker-name {
+        font-size: var(--font-size-large);
+        font-weight: 700;
+        margin-bottom: 5px;
+      }
+
+      .ticker-details {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
       .price,
       .change {
-        margin-right: 20px;
-        font-size: var(--font-size-large);
+        font-size: var(--font-size-normal);
         font-weight: 600;
       }
 
@@ -161,7 +173,7 @@
 
     <div class="controls">
       <label for="speed-control">Speed (seconds):</label>
-      <input type="number" id="speed-control" value="60" min="10" step="1" />
+      <input type="number" id="speed-control" value="300" min="10" step="1" />
     </div>
 
     <div class="last-update" id="last-update">
@@ -193,9 +205,14 @@
           const tickerItem = document.createElement("div");
           tickerItem.classList.add("ticker-item");
 
-          const name = document.createElement("span");
-          name.classList.add("name");
+          // Create ticker name (top)
+          const name = document.createElement("div");
+          name.classList.add("ticker-name");
           name.textContent = stock;
+
+          // Create details container (bottom)
+          const detailsContainer = document.createElement("div");
+          detailsContainer.classList.add("ticker-details");
 
           const price = document.createElement("span");
           price.classList.add("price");
@@ -225,11 +242,15 @@
           );
           arrow.textContent = percentageChange >= 0 ? "▲" : "▼";
 
+          // Append to details container
+          detailsContainer.appendChild(price);
+          detailsContainer.appendChild(percentageChangeSpan);
+          detailsContainer.appendChild(priceChangeSpan);
+          detailsContainer.appendChild(arrow);
+
+          // Append to main ticker item
           tickerItem.appendChild(name);
-          tickerItem.appendChild(price);
-          tickerItem.appendChild(percentageChangeSpan);
-          tickerItem.appendChild(priceChangeSpan);
-          tickerItem.appendChild(arrow);
+          tickerItem.appendChild(detailsContainer);
 
           return tickerItem;
         }
@@ -314,8 +335,8 @@
         // Initial fetch
         fetchTickerData();
         
-        // Refresh data every minute
-        setInterval(fetchTickerData, 60000);
+        // Refresh data every 5 minutes (300000ms = 5 minutes)
+        setInterval(fetchTickerData, 300000);
 
         // Update speed when control changes
         speedControl.addEventListener("input", updateTickerSpeed);

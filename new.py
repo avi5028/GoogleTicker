@@ -122,7 +122,7 @@ def test():
     return jsonify({'message': 'Test endpoint working', 'data_count': len(ticker_data)})
 
 def schedule_updates():
-    schedule.every(1).minutes.do(update_data)  # Reduced to 1 minute
+    schedule.every(5).minutes.do(update_data)  # Update every 5 minutes
     while True:
         schedule.run_pending()
         time.sleep(1)

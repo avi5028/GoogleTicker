@@ -57,3 +57,16 @@
 2025-06-16 11:38:57,695 - INFO - 127.0.0.1 - - [16/Jun/2025 11:38:57] "[33mGET /test HTTP/1.1[0m" 404 -
 2025-06-16 11:38:57,735 - INFO - 127.0.0.1 - - [16/Jun/2025 11:38:57] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
 2025-06-16 11:39:06,550 - INFO - Data update completed
+2025-06-18 18:19:09,348 - INFO - Starting application...
+2025-06-18 18:19:09,348 - INFO - Starting data update...
+2025-06-18 18:19:46,447 - INFO - Data update completed
+2025-06-18 18:19:46,448 - INFO - Flask application started
+2025-06-18 18:19:46,461 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.91:5000
+2025-06-18 18:19:46,462 - INFO - [33mPress CTRL+C to quit[0m
+2025-06-18 18:19:52,357 - INFO - 127.0.0.1 - - [18/Jun/2025 18:19:52] "GET / HTTP/1.1" 200 -
+2025-06-18 18:19:52,394 - INFO - API request received. Data count: 50
+2025-06-18 18:19:52,395 - INFO - 127.0.0.1 - - [18/Jun/2025 18:19:52] "GET /api/ticker HTTP/1.1" 200 -
+2025-06-18 18:19:52,459 - INFO - 127.0.0.1 - - [18/Jun/2025 18:19:52] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
